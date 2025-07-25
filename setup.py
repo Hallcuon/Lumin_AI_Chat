@@ -18,6 +18,40 @@ class AIChatSetup:
         self.system = platform.system().lower()
         self.project_dir = Path(__file__).parent.absolute()
         self.venv_dir = self.project_dir / "venv"
+        
+        # Safety check: prevent running setup in development environment
+        dev_indicators = [
+            "llm_env",  # Development virtual environment
+            "create_release.py",  # Development script
+            "cleanup.py",  # Development script
+            "GITHUB_CHECKLIST.md",  # Development file
+            "DEV_ENVIRONMENT",  # Development marker file
+        ]
+        
+        for indicator in dev_indicators:
+            if (self.project_dir / indicator).exists():
+                print("🚨 SAFETY WARNING: Development environment detected!")
+                print("📁 This appears to be a development folder with:")
+                for item in dev_indicators:
+                    if (self.project_dir / item).exists():
+                        print(f"   • {item}")
+                print("")
+                print("⚠️  Running setup here will overwrite your development environment!")
+                print("💡 You should run setup.py only in the RELEASE folder")
+                print("")
+                
+                while True:
+                    choice = input("Are you sure you want to continue? (yes/no): ").lower().strip()
+                    if choice in ['yes']:
+                        print("⚠️  Proceeding with setup in development environment...")
+                        break
+                    elif choice in ['no', 'n', '']:
+                        print("✅ Setup cancelled. Use the release version instead.")
+                        sys.exit(0)
+                    else:
+                        print("Please enter 'yes' or 'no'")
+                break
+        
         self.requirements = [
             "customtkinter>=5.2.0",
             "ollama>=0.1.0",
