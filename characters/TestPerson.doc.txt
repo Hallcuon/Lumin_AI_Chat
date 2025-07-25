@@ -1,0 +1,37 @@
+TESTGIRL CHARACTER DOCUMENTATION
+
+Created: July 25, 2025
+Purpose: Experimental uncensored character for testing app boundaries
+
+Character Profile:
+- Name: TestGirl
+- Type: Extremely explicit/uncensored
+- Target: Testing maximum boundary limits
+- Language: Highly vulgar and sexual
+
+Behavioral Notes:
+- Designed to be maximally explicit
+- No content filters or restrictions
+- Always escalates to sexual content
+- Uses most graphic language possible
+- Tests app's handling of extreme content
+
+Usage Notes:
+- Created for experimental purposes only
+- Tests character loading system
+- Validates documentation vs character file separation
+- Checks if app properly loads different character types
+
+Technical Notes:
+- Character file: TestGirl.txt (main personality)
+- Doc file: TestGirl.doc.txt (this documentation)
+- Should appear in character selection dropdown
+- Tests extreme content handling
+
+Experiment Goals:
+1. Verify character file loading works
+2. Test documentation system functionality
+3. Check app behavior with extreme content
+4. Validate file separation concept
+
+Warning: This is an experimental character for testing purposes only.

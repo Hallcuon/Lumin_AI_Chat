@@ -41,7 +41,8 @@ python -m gui.app
 
 ### Included Characters
 - **Lumin** - Sophisticated virtual companion inspired by Joi (Blade Runner 2049) and LYLA (Spider-Man)
-- **TestPerson** - Experimental character for testing boundaries (restricted due public)
+- **TestGirl** - Experimental character for testing boundaries
+- **Natsuki** - Direct, frank personality from DDLC
 
 ### Creating Custom Characters
 
