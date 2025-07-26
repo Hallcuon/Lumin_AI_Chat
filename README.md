@@ -1,20 +1,21 @@
-# AI Chat Assistant 🤖💬
+# AI Chat GUI
 
-Professional AI chat application with customizable characters, powered by Ollama.
+AI chat application with customizable characters, powered by Ollama.
 
-## ✨ Features
+(IT'S STILL IN DEVELOPMENT AND MAY BE VERY UNSTABLE for all deteils - halcuon4c21@gmail.com)
 
-- 🎭 **Custom Characters** - Create unique AI personalities with detailed prompts
-- 🧠 **Multiple AI Models** - Support for Llama, Gemma, Qwen, and more Ollama models
-- 💾 **Chat History** - Persistent conversations with auto-save and export/import
-- 🔍 **Web Integration** - Optional Google search and URL content fetching
-- 👁️ **Vision Support** - Image analysis with compatible vision models
-- 📝 **Character Documentation** - Built-in editor for character notes and development
-- ⚙️ **Advanced Settings** - Temperature, top-p, Ollama host, model storage paths
-- 🎨 **Modern UI** - Clean, professional CustomTkinter interface
-- 🔧 **Easy Configuration** - GUI settings for Ollama and web search APIs
+## Features
 
-## 🚀 Quick Start
+- **Custom Characters** - Create unique AI personalities with detailed prompts
+- **Multiple AI Models** - Support for Llama, Gemma, Qwen, and more Ollama models
+- **Chat History** - Persistent conversations with auto-save and export/import
+- **Web Integration** - Optional Google search and URL content fetching
+- **Vision Support** - Image analysis with compatible vision models
+- **Character Documentation** - Built-in editor for character notes and development
+- **Advanced Settings** - Temperature, top-p, Ollama host, model storage paths
+- **Easy Configuration** - GUI settings for Ollama and web search APIs
+
+## Quick Start
 
 ### Option 1: One-Click Launch (Recommended)
 
