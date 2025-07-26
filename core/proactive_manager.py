@@ -46,21 +46,34 @@ class ProactiveManager:
                         ]
                         if hasattr(self.app, 'messages') and self.app.messages:
                             proactive_messages.extend(self.app.messages[1:])
-                        response = ollama.chat(model=self.app.selected_model.get(), messages=proactive_messages)
+                        response = ollama.chat(model=self.app.selected_model.get(), messages=proactive_messages, options={
+                            "temperature": 0.8,  # Use safe parameters for proactive messages
+                            "top_p": 0.9
+                        })
                         potential_message = response['message']['content']
-                        if potential_message and "NOTHING_TO_SAY" not in potential_message:
+                        
+                        # Enhanced filtering for empty/invalid proactive responses
+                        if (potential_message and 
+                            potential_message.strip() and  # Not empty or whitespace
+                            "NOTHING_TO_SAY" not in potential_message and
+                            len(potential_message.strip()) > 3):  # At least 4 characters
+                            
+                            print(f"[PROACTIVE] Generated message: {potential_message[:50]}...")
                             self.app.messages.append({'role': 'assistant', 'content': potential_message})
                             self.app.add_message_to_history(potential_message, "assistant")
+                            
                             if NOTIFICATIONS_AVAILABLE:
                                 try:
                                     notification.notify(
-                                        title=f"Повідомлення від {self.app.char_name}",
+                                        title=f"{self.app.char_name} said",
                                         message=potential_message[:100] + "..." if len(potential_message) > 100 else potential_message,
                                         app_icon=None,
                                         timeout=10,
                                     )
                                 except Exception as e:
                                     print(f"[WARNING] Notification failed: {e}")
+                        else:
+                            print(f"[PROACTIVE] Filtered out invalid response: '{potential_message}'")
                     finally:
                         self.app.message_lock.release()
             except Exception as e:

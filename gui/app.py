@@ -44,6 +44,7 @@ class ChatApp(ctk.CTk):
         self.prompt_format = ctk.StringVar(value="Plain")
         self.temperature = ctk.DoubleVar(value=0.7)
         self.top_p = ctk.DoubleVar(value=0.95)
+        self.proactive_enabled = ctk.BooleanVar(value=True)  # Proactive behavior toggle
         
         # Grid configuration
         self.grid_rowconfigure(2, weight=1)
@@ -96,6 +97,11 @@ class ChatApp(ctk.CTk):
         self.top_p_entry = ctk.CTkEntry(self.settings_frame, textvariable=self.top_p, width=60)
         self.top_p_entry.grid(row=1, column=5, padx=10, pady=5, sticky="ew")
         
+        # Proactive behavior toggle
+        self.proactive_checkbox = ctk.CTkCheckBox(self.settings_frame, text="Auto Messages", 
+                                                 variable=self.proactive_enabled, command=self.toggle_proactive_manager)
+        self.proactive_checkbox.grid(row=1, column=6, padx=10, pady=5, sticky="w")
+        
         ctk.CTkLabel(self.settings_frame, text="Select Character:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
         character_options = ["Default AI Assistant"] + self.character_files
         self.character_optionmenu = ctk.CTkOptionMenu(self.settings_frame, values=character_options, 
@@ -105,7 +111,7 @@ class ChatApp(ctk.CTk):
         self.restart_chat_button = ctk.CTkButton(self.settings_frame, text="Restart Chat", 
                                                 command=self.restart_chat_session, fg_color="#2a1261", 
                                                 hover_color="#210f4a", text_color="#FFFFFF")
-        self.restart_chat_button.grid(row=0, column=6, rowspan=2, padx=10, pady=5, sticky="nsew")
+        self.restart_chat_button.grid(row=0, column=7, rowspan=2, padx=10, pady=5, sticky="nsew")
         
         # Model metadata info
         self.model_info_label = ctk.CTkLabel(self.settings_frame, text="", anchor="w", justify="left", font=("Arial", 12))
@@ -222,6 +228,28 @@ class ChatApp(ctk.CTk):
             self.system_prompt = manual_prompt
             self.add_message_to_history("System: Manual system prompt set.", "system")
             self.load_character_chat_history()
+
+    def toggle_proactive_manager(self):
+        """Toggle proactive manager on/off based on checkbox state"""
+        if self.proactive_enabled.get():
+            # Enable proactive manager
+            if hasattr(self, 'proactive_manager') and self.proactive_manager:
+                try:
+                    self.proactive_manager.start()
+                    self.add_message_to_history("System: Auto messages enabled - AI may initiate conversations.", "system")
+                    print("[DEBUG] ProactiveManager enabled")
+                except Exception as e:
+                    print(f"[ERROR] Failed to start proactive manager: {e}")
+                    self.add_message_to_history("System: Failed to enable auto messages.", "system")
+        else:
+            # Disable proactive manager
+            if hasattr(self, 'proactive_manager') and self.proactive_manager:
+                try:
+                    self.proactive_manager.stop()
+                    self.add_message_to_history("System: Auto messages disabled - AI will only respond to your messages.", "system")
+                    print("[DEBUG] ProactiveManager disabled")
+                except Exception as e:
+                    print(f"[ERROR] Failed to stop proactive manager: {e}")
 
     def on_closing(self):
         self.destroy()
@@ -669,7 +697,7 @@ GOOGLE_CSE_ID = '{self.google_cse_id}'
         print(f"[DEBUG] Selected model: {selected_model_name}, Selected character: {self.char_name}")
         self.load_character_chat_history()
         
-        # Restart proactive manager
+        # Restart proactive manager based on checkbox state
         if hasattr(self, 'proactive_manager') and self.proactive_manager:
             try:
                 self.proactive_manager.stop()
@@ -677,9 +705,13 @@ GOOGLE_CSE_ID = '{self.google_cse_id}'
                 pass
         try:
             self.proactive_manager = ProactiveManager(self)
-            self.proactive_manager.start()
+            if self.proactive_enabled.get():
+                self.proactive_manager.start()
+                print("[DEBUG] ProactiveManager started (checkbox enabled)")
+            else:
+                print("[DEBUG] ProactiveManager created but not started (checkbox disabled)")
         except Exception as e:
-            print(f"[WARNING] Could not start proactive manager: {e}")
+            print(f"[WARNING] Could not create proactive manager: {e}")
 
     def load_character_chat_history(self):
         pass
@@ -786,11 +818,44 @@ GOOGLE_CSE_ID = '{self.google_cse_id}'
                     context_messages.insert(0, {'role': 'system', 'content': updated_system_prompt})
                 messages_for_ollama = context_messages + [last_user_message]
                 import ollama
+                
+                # Log generation attempt
+                print(f"[INFO] Starting generation - Model: {model_to_use_current}, Temp: {self.temperature.get()}, Top-P: {self.top_p.get()}")
+                generation_start = time.time()
+                
                 response = ollama.chat(model=model_to_use_current, messages=messages_for_ollama, options={
                     "temperature": self.temperature.get(),
                     "top_p": self.top_p.get()
                 })
+                generation_time = time.time() - generation_start
+                print(f"[INFO] Generation completed in {generation_time:.2f} seconds")
+                
                 assistant_response = response['message']['content']
+                
+                # Enhanced empty response handling
+                if not assistant_response or assistant_response.strip() == "":
+                    print(f"[WARNING] AI generated empty response - Model: {model_to_use_current}, Temp: {self.temperature.get()}, Top-P: {self.top_p.get()}")
+                    print(f"[DEBUG] Raw response: {response}")
+                    
+                    # Try fallback with safer parameters
+                    print("[INFO] Retrying with safer parameters...")
+                    try:
+                        fallback_response = ollama.chat(model=model_to_use_current, messages=messages_for_ollama, options={
+                            "temperature": 0.7,
+                            "top_p": 0.9
+                        })
+                        assistant_response = fallback_response['message']['content']
+                        
+                        if not assistant_response or assistant_response.strip() == "":
+                            print("[ERROR] Fallback also failed, using error message")
+                            assistant_response = "⚠️ I'm experiencing technical difficulties generating a response. This might be due to extreme generation parameters or model issues. Please try again or adjust Temperature/Top-P settings."
+                        else:
+                            print("[SUCCESS] Fallback retry worked!")
+                            assistant_response = "🔄 " + assistant_response  # Mark as retry
+                    except Exception as fallback_error:
+                        print(f"[ERROR] Fallback retry failed: {fallback_error}")
+                        assistant_response = f"❌ Critical error: Both primary and fallback generation failed. Model: {model_to_use_current}. Please check Ollama status."
+                
                 self.messages.append({'role': 'assistant', 'content': assistant_response})
                 self.add_message_to_history(assistant_response, "assistant")
                 
